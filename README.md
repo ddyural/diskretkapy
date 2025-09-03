@@ -1,0 +1,2 @@
+# diskretkapy
+PYthonDIskretkaDEvelopment
