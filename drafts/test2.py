@@ -46,6 +46,13 @@ class MainScreen(Screen):
 
         self.add_widget(layout)
 
+    def check_config(self):
+        if "q1" not in self.config:
+            print("в конфигурации нет q1")
+            return False
+        else:
+            return True
+
     def inputtext(self, instance):
         text = self.textinput.text
         self.textinput.text = ""
@@ -59,9 +66,13 @@ class MainScreen(Screen):
 
     def go_to_screen2(self, instance):
         #self.data = self.config
-        self.manager.get_screen("screen2").config = list(self.config)
-        self.manager.get_screen("screen2").lbl3.text = f"Текущая конфигурация: {self.config}"
-        self.manager.current = 'screen2'
+        if self.check_config():
+            self.manager.get_screen("screen2").config = list(self.config)
+            self.manager.get_screen("screen2").lbl3.text = f"Текущая конфигурация: {self.config}"
+            self.manager.current = 'screen2'
+        else:
+            self.manager.current = 'screen2'
+            self.manager.current = 'screen1'
 
 
 class Screen2(Screen):
@@ -80,18 +91,21 @@ class Screen2(Screen):
         lbl = Label(text="Ввод правила по одному символу", font_size='30sp', color=[0, 1, 0, 1])
         lbl2 = Label(text="текущий формат: δ(q, a) = (b, D, p)\nдопустимые значения: δ(q¹, 0/1) = (0/1, R/L, q¹/q⁰)",
                      font_size='30sp', color=[0, 1, 0, 1])
-        self.lbl3 = Label(text=f"Текущая конфигурация: {self.config}", font_size='30sp', color=[0, 1, 0, 1])
+        self.lbl3 = Label(text=f"Текущая конфигурация: {self.config}\n", font_size='30sp', color=[0, 1, 0, 1])
+        self.lblN = Label(text=f"Новая конфигурация: *её нет*", font_size='30sp', color=[0, 1, 0, 1])
         self.lbl4 = Label(text=f"Текущее правило: {self.rule}", font_size='30sp', color=[0, 1, 0, 1])
         self.lbl5 = Label(text="введите, где стоит xxx: δ(q1, xxx) = (*, *, *): ", font_size='30sp', color=[0, 1, 0, 1])
 
         btn1 = Button(text="Ввод", font_size='20sp', background_color=[0, 1, 0, 1], height=100)
-        btn1.bind(on_press=self.enter_rule())
+        btn1.bind(on_press=self.enter_rule)
 
         btn2 = Button(text="Применить правило", font_size='20sp', background_color=[0, 1, 0, 1], height=100)
+        btn2.bind(on_press=self.apply_rule)
 
         layout.add_widget(lbl)
         layout.add_widget(lbl2)
         layout.add_widget(self.lbl3)
+        layout.add_widget(self.lblN)
         layout.add_widget(self.lbl4)
         layout.add_widget(self.lbl5)
         layout.add_widget(self.textinput)
@@ -99,7 +113,6 @@ class Screen2(Screen):
         layout2.add_widget(btn2)
         layout.add_widget(layout2)
         self.add_widget(layout)
-
 
     def enter_rule(self, instance):
         text = self.textinput.text.lower()
@@ -124,8 +137,42 @@ class Screen2(Screen):
         print(self.rule)
         self.textinput.text = ''
 
+    def check_rule(self):
+        cfg = self.config
+        rule = self.rule
+        q1_index = cfg.index("q1")
+        if q1_index + 1 >= len(cfg):
+            print("нет символа справа от q1")
+            return False
+        if cfg[q1_index + 1] != rule[0]:
+            print("справа от q1: ", cfg[q1_index + 1])
+            print("значение w1: ", rule[0])
+            print("символ справа не соответствует 'a'")
+            return False
+        else:
+         return True
+
     def apply_rule(self, instance):
-        pass
+        print("мы на этом месте")
+        if self.check_rule():
+            cfg = self.config
+            rule = self.rule
+            q1_index = cfg.index("q1")
+            cfg[q1_index + 1] = rule[1]
+            if rule[2] == "r":
+                cfg[q1_index], cfg[q1_index + 1] = cfg[q1_index + 1], cfg[q1_index]
+                if rule[3] == "q0":
+                    q1_index = cfg.index("q1")
+                    cfg[q1_index] = 'q0'
+            elif rule[2] == "l":
+                cfg[q1_index], cfg[q1_index - 1] = cfg[q1_index - 1], cfg[q1_index]
+                if rule[3] == "q0":
+                    q1_index = cfg.index("q1")
+                    cfg[q1_index] = 'q0'
+            self.lblN.text = f'Новая конфигурация: {cfg}'
+        else:
+            print("проверка провалилась")
+            return 0
 
 
 
